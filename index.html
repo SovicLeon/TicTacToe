@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Server 1</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      }
+      table {
+        background-color: black;
+        margin: 10px auto;
+      }
+      td {
+        background-color: white;
+        width: 100px;
+        height: 100px;
+        text-align: center;
+        font-size: 300%;
+      }
+      h3 {
+        text-align: center;
+      }
+      #startGameButton {
+        display: block;
+        visibility: visible;
+        margin: 10px auto;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h3 id="turn">Turn: N/A</h3>
+      <table>
+        <tr>
+          <td onclick="squereClick(0)" id="0"></td>
+          <td onclick="squereClick(1)" id="1"></td>
+          <td onclick="squereClick(2)" id="2"></td>
+        </tr>
+        <tr>
+          <td onclick="squereClick(3)" id="3"></td>
+          <td onclick="squereClick(4)" id="4"></td>
+          <td onclick="squereClick(5)" id="5"></td>
+        </tr>
+        <tr>
+          <td onclick="squereClick(6)" id="6"></td>
+          <td onclick="squereClick(7)" id="7"></td>
+          <td onclick="squereClick(8)" id="8"></td>
+        </tr>
+      </table>
+      <h3 id="myChar">You are N/A</h3>
+      <button onclick="starGame()" id="startGameButton"><h2>Start game</h2></button>
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      var socket = io();
+
+      var arr = [0,0,0,0,0,0,0,0,0,1,0]
+
+      var playerChar = 0;
+      var otherChar = 0;
+
+      // when squere clicked
+      function squereClick(squere) {
+        arr[9] = otherChar;
+        arr[squere] = playerChar;
+        socket.emit('dataArr', arr);
+      }
+
+      socket.on('dataArrClient', function(msg) {
+        arr = msg;
+        if (arr[10] != 0) {
+          if (arr[10] == 1) {
+            document.getElementById("turn").innerHTML = "X won!";
+          } else if (arr[10] == 2) {
+            document.getElementById("turn").innerHTML = "O won!";
+          } else {
+            document.getElementById("turn").innerHTML = "Draw!";
+          }
+          document.getElementById("startGameButton").style.visibility = "visible";
+        } else if (arr[9] == 1) {
+          document.getElementById("turn").innerHTML = "Turn: X";
+        } else if (arr[9] == 2) {
+          document.getElementById("turn").innerHTML = "Turn: O";
+        } else {
+          document.getElementById("startGameButton").style.visibility = "visible";
+          document.getElementById("turn").innerHTML = "Turn: N/A";
+          document.getElementById("myChar").innerHTML = "You are N/A";
+        }
+        for (let i = 0; i < 9; i++) {
+          if (arr[i] == 1) {
+            document.getElementById(i.toString()).innerHTML = "X";  
+          } else if (arr[i] == 2) {
+            document.getElementById(i.toString()).innerHTML = "O";  
+          } else {
+            document.getElementById(i.toString()).innerHTML = "";  
+          }
+        }
+      });
+
+      socket.on('updates', function(msg) {
+        alert(msg);
+      });
+
+      function starGame () {
+        socket.emit('start', "start game");
+      };
+
+      socket.on('myVariables', function(msg) {
+        document.getElementById("startGameButton").style.visibility = "hidden";
+        playerChar = msg[0];
+        otherChar = msg[1];
+        if (playerChar == 1) {
+          document.getElementById("myChar").innerHTML = "You are X";
+        } else {
+          document.getElementById("myChar").innerHTML = "You are O";
+        }
+      });
+    </script>
+  </body>
+</html>
